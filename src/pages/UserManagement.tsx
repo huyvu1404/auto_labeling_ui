@@ -85,6 +85,7 @@ const UserManagement = () => {
         const data = await response.json();
         setUsers(data);
       } catch (err) {
+        console.log(err)
         alert("Error occured")
       } finally {
         setLoading(false);
@@ -357,7 +358,7 @@ return (
           <CardHeader>
             <CardTitle>Search & Filter</CardTitle>
             <CardDescription>
-              Find users by name, email, or department
+              Find users by name or email.
             </CardDescription>
           </CardHeader>
           <CardContent>
