@@ -78,10 +78,7 @@ const UserManagement = () => {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${token}`, 
-            "Accept": "application/json",     
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "same-site",
+            "Accept": "application/json"
           },
         });
         if (!response.ok) throw new Error("Failed to fetch users");
@@ -170,9 +167,6 @@ const UserManagement = () => {
           "Authorization": `Bearer ${token}`,  
           "Content-Type": "application/json",
           "Accept": "application/json",
-          "sec-fetch-dest": "empty",
-          "sec-fetch-mode": "cors",
-          "sec-fetch-site": "same-site",
         },
         body: JSON.stringify(newUser),
       });
