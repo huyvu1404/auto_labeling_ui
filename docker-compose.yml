@@ -1,0 +1,8 @@
+
+services:
+  auto-labeling-app:
+    container_name: auto_labeling
+    build: .
+    ports:
+      - "8081:80"  
+    restart: unless-stopped
