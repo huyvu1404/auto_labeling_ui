@@ -3,7 +3,7 @@ import { Navigate } from "react-router-dom";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
-const USER_API_URL = import.meta.env.VITE_USER_API_URL;
+const BACKEND_ENDPOINT = import.meta.env.VITE_BACKEND_ENDPOINT;
 
 export default function Login() {
   const { login } = useAuth();
@@ -18,7 +18,7 @@ export default function Login() {
   const handleForgetPassword = async (email: string) => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${USER_API_URL}/api/users/forgot-password`, {
+      const response = await fetch(`${BACKEND_ENDPOINT}/api/users/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
