@@ -127,18 +127,18 @@ const [isDropdownOpen, setIsDropdownOpen] = useState(false);
       </CardHeader>
 
       <div className="rounded-md border">
-        <Table>
-          <TableHeader>
+        <Table className="w-full table-fixed">
+          <TableHeader >
             <TableRow>
-              <TableHead>Task ID</TableHead>
-              <TableHead>File Name</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Start Time</TableHead>
-              <TableHead>Duration</TableHead>
-              <TableHead>Finish Time</TableHead>
-              <TableHead>Created By</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="w-[120px] text-center">Task ID</TableHead>
+              <TableHead className="w-[120px] text-center">File Name</TableHead>
+              <TableHead className="w-[100px] text-center">Category</TableHead>
+              <TableHead className="w-[150px] text-center">Status</TableHead>
+              <TableHead className="w-[180px] text-center">Start Time</TableHead>
+              <TableHead className="w-[70px] text-center">Duration</TableHead>
+              <TableHead className="w-[180px] text-center">Finish Time</TableHead>
+              <TableHead className="w-[130px] text-center">Created By</TableHead>
+              <TableHead className="text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
 
