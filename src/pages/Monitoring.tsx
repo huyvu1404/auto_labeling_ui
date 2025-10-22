@@ -21,12 +21,21 @@ export interface Task {
   duration?: number;
   full_name: string;
 }
+interface Parameters {
+  margin: number;
+  confidence: number;
+  response_distribution: number;
+}
 
 const Monitoring = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-
+  const [selectedParams, setSelectedParams] = useState({
+      margin: 0.05,
+      confidence: 0.95,
+      response_distribution: 0.5,
+    });
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,15 +43,20 @@ const Monitoring = () => {
   const [isSampling, setIsSampling] = useState< string | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true); // loading cho lần đầu vào trang
 
-  const handleSample = async (task_id: string) => {
+  
+  const handleSample = async (task_id: string, params: Parameters ) => {
     try {
       setIsSampling(task_id);
       const token = localStorage.getItem("token")
-      const sampleResponse = await fetch(`${BACKEND_ENDPOINT}/api/tasks/sampling/${task_id}`, {
-        method: "GET",
+      const formData = new FormData();
+      formData.append("task_id", task_id);
+      formData.append("params", JSON.stringify(params))
+      const sampleResponse = await fetch(`${BACKEND_ENDPOINT}/api/tasks/download-sampling`, {
+        method: "POST",
         headers: { 
           "Authorization": `Bearer ${token}`,
-        }
+        },
+        body: formData
       });
       const sampleBlob = await sampleResponse.blob();
       const url = window.URL.createObjectURL(sampleBlob);
@@ -54,6 +68,7 @@ const Monitoring = () => {
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (error) {
+      console.log(error)
       alert("An error occurred during sampling.");
     } finally {
       setIsSampling(null);
@@ -248,7 +263,12 @@ const Monitoring = () => {
       handleDownload={handleDownload} 
       isDownloading={isDownloading} 
       handleSample={handleSample}
-      isSampling={isSampling} />
+      isSampling={isSampling}
+      params={selectedParams}
+      onParamsChange={
+        (key, value) =>
+         setSelectedParams((prev) => ({ ...prev, [key]: value }))
+         } />
     </div>
   );
 };

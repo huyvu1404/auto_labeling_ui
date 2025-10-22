@@ -3,9 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileUpload as FileUploadComponent } from "@/components/FileUpload";
 import { CategorySelect } from "@/components/CategorySelect";
-import { DataPreview } from "@/components/DataPreview";
-import { FileSubmit } from "@/components/FileSubmit"
-import { useAuth } from "@/hooks/use-auth";
+import { ParameterSelect } from "@/components/ParametersSelect";
+// import { DataPreview } from "@/components/DataPreview";
+// import { FileSubmit } from "@/components/FileSubmit"
+// import { useAuth } from "@/hooks/use-auth";
 export interface ExcelData {
   headers: string[];
   data: any[][];
@@ -16,9 +17,19 @@ const BACKEND_ENDPOINT = import.meta.env.VITE_BACKEND_ENDPOINT;
 const FileUpload = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [excelData, setExcelData] = useState<ExcelData | null>(null);
-  const [isSampling, setIsSampling] = useState(false);    
-  const { user } = useAuth();
+  const [selectedParams, setSelectedParams] = useState({
+      margin: 0.05,
+      confidence: 0.95,
+      response_distribution: 0.5,
+    });
+  // const [excelData, setExcelData] = useState<ExcelData | null>(null);
+  // const [isSampling, setIsSampling] = useState(false);    
+  // const { user } = useAuth();
+  useEffect(() => {
+    return () => {
+      setSelectedParams({ margin: NaN, confidence: NaN, response_distribution: NaN });
+    };
+  }, []);
   const handleUploaded = async () => {
     const formData = new FormData();
     formData.append("file", selectedFile); 
@@ -41,15 +52,21 @@ const FileUpload = () => {
     }
     setSelectedFile(null);
     setSelectedCategory("");
-    setExcelData(null);
+    // setExcelData(null);
   };
 
-  const handleSample = async () => {
+  const handleSampling = async () => {
     try {
-      setIsSampling(true);
-
+      // setIsSampling(true);
       const formData = new FormData();
       formData.append("file", selectedFile);
+      const params = {
+        margin: selectedParams.margin,
+        confidence: selectedParams.confidence,
+        response_distribution: selectedParams.response_distribution,
+      };
+
+      formData.append("params", JSON.stringify(params));
       const file_name = selectedFile.name;
       const token = localStorage.getItem("token")
       const sampleResponse = await fetch(`${BACKEND_ENDPOINT}/api/tasks/sampling`, {
@@ -78,7 +95,7 @@ const FileUpload = () => {
     } catch (error) {
       alert("An error occurred during sampling.");
     } finally {
-      setIsSampling(null);
+      // setIsSampling(null);
       setSelectedFile(null);
     }
   };
@@ -109,7 +126,7 @@ const FileUpload = () => {
                 <FileUploadComponent
                   selectedFile={selectedFile}
                   onFileSelect={setSelectedFile}
-                  onDataParsed={setExcelData}
+                  // onDataParsed={setExcelData}
                 />
               </CardContent>
             </Card>
@@ -151,24 +168,39 @@ const FileUpload = () => {
         <TabsContent value="sample" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Data Sampling</CardTitle>
-              <CardDescription> Sample the data according to the percentage of each sentiment in the original dataset. Use a sample size formula to determine the total number of data points to be sampled. </CardDescription>
+              <CardTitle>Upload Excel File</CardTitle>
+              <CardDescription>  Select an Excel file to upload and process. </CardDescription>
             </CardHeader>
             <CardContent>
                 <FileUploadComponent
                   selectedFile={selectedFile}
                   onFileSelect={setSelectedFile}
-                  onDataParsed={setExcelData}
+                  // onDataParsed={setExcelData}
                 />
             </CardContent>
           </Card>
           <Card>
+            <CardHeader>
+              <CardTitle> Select Parameters</CardTitle>
+              <CardDescription> Select the appropriate parameters. </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ParameterSelect
+                  selectedParams={selectedParams}
+                  onParamsSelect={setSelectedParams}
+                  selectedFile={selectedFile}
+                  handleUploaded={handleSampling}
+                  disabled={!selectedFile}
+                />
+              </CardContent>
+          </Card>
+          {/* <Card>
             <FileSubmit
               selectedFile={selectedFile}
-              handleSample={handleSample}
+              handleSample={handleSampling}
               disabled={!selectedFile}
             />
-          </Card>
+          </Card> */}
         </TabsContent>
 
         {/* <TabsContent value="spam" className="space-y-6">

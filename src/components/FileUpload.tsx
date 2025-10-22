@@ -3,18 +3,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Upload, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
-interface ExcelData {
-  headers: string[];
-  data: any[][];
-}
+// import * as XLSX from "xlsx";
+// interface ExcelData {
+//   headers: string[];
+//   data: any[][];
+// }
 interface FileUploadProps {
   selectedFile: File | null;
   onFileSelect: (file: File | null) => void;
-  onDataParsed: (data: ExcelData | null) => void;
+  // onDataParsed: (data: ExcelData | null) => void;
 }
 
-export const FileUpload = ({ selectedFile, onFileSelect, onDataParsed }: FileUploadProps) => {
+export const FileUpload = ({ selectedFile, onFileSelect }: FileUploadProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -23,38 +23,38 @@ export const FileUpload = ({ selectedFile, onFileSelect, onDataParsed }: FileUpl
       if (file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" || 
           file.type === "application/vnd.ms-excel") {
         onFileSelect(file);
-        parseExcelFile(file);
+        // parseExcelFile(file);
         toast.success("File selected successfully!");
       } else {
         toast.error("Please select a valid Excel file (.xlsx or .xls)");
         onFileSelect(null);
-        onDataParsed(null);
+        // onDataParsed(null);
       }
     }
     event.target.value = "";
   };
 
-  const parseExcelFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = new Uint8Array(e.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: "array" });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+  // const parseExcelFile = (file: File) => {
+  //   const reader = new FileReader();
+  //   reader.onload = (e) => {
+  //     try {
+  //       const data = new Uint8Array(e.target?.result as ArrayBuffer);
+  //       const workbook = XLSX.read(data, { type: "array" });
+  //       const sheetName = workbook.SheetNames[0];
+  //       const worksheet = workbook.Sheets[sheetName];
+  //       // const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
         
-        if (jsonData.length > 0) {
-          const headers = jsonData[0] as string[];
-          const dataRows = jsonData.slice(1) as any[][];
-          onDataParsed({ headers, data: dataRows });
-        }
-      } catch (error) {
-        toast.error("Error parsing Excel file");
-      }
-    };
-    reader.readAsArrayBuffer(file);
-  };
+  //       // if (jsonData.length > 0) {
+  //       //   const headers = jsonData[0] as string[];
+  //       //   const dataRows = jsonData.slice(1) as any[][];
+  //       //   onDataParsed({ headers, data: dataRows });
+  //       // }
+  //     } catch (error) {
+  //       toast.error("Error parsing Excel file");
+  //     }
+  //   };
+  //   reader.readAsArrayBuffer(file);
+  // };
 
   const handleButtonClick = () => {
     fileInputRef.current?.click();

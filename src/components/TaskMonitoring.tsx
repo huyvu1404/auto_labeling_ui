@@ -1,12 +1,32 @@
 import { useState } from "react";
-import { Loader2, Download, Check, Clock, RefreshCw, List, FileDown } from "lucide-react";
+import {
+  Loader2,
+  Download,
+  Check,
+  Clock,
+  RefreshCw,
+  List,
+  FileDown,
+} from "lucide-react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { DecimalInput } from "./ui/decimal-input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -19,16 +39,41 @@ const getStatusBadge = (status: string) => {
     pending: { text: "Pending", bg: "bg-gray-300", textColor: "text-gray-800" },
   };
 
-  const config = statusConfig[status.toLowerCase()] || { text: status, bg: "bg-gray-200", textColor: "text-gray-800" };
+  const config = statusConfig[status.toLowerCase()] || {
+    text: status,
+    bg: "bg-gray-200",
+    textColor: "text-gray-800",
+  };
 
   return (
-    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full font-medium ${config.bg} ${config.textColor}`}>
+    <span
+      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full font-medium ${config.bg} ${config.textColor}`}
+    >
       {status === "completed" && <Check className="h-4 w-4" />}
       {status === "running" && <Clock className="h-4 w-4" />}
       {config.text}
     </span>
   );
 };
+
+interface Parameters {
+  margin: number;
+  confidence: number;
+  response_distribution: number;
+}
+
+interface TaskMonitoringProps {
+  tasks: Task[];
+  isLoading: boolean;
+  handleDownload: (task_id: string) => void;
+  isDownloading: string | null;
+
+  // ✅ Sampling
+  handleSample: (task_id: string, params: Parameters) => void;
+  isSampling: string | null;
+  params: Parameters;
+  onParamsChange: (key: keyof Parameters, value: number) => void;
+}
 
 const TaskMonitoring = ({
   tasks,
@@ -37,21 +82,15 @@ const TaskMonitoring = ({
   isDownloading,
   handleSample,
   isSampling,
-}: {
-  tasks: Task[];
-  isLoading: boolean;
-  handleDownload: (task_id: string) => void;
-  isDownloading: string | null;
-  handleSample: (task_id: string) => void;
-  isSampling: string | null;
-}) => {
-  // ✅ Thêm state phân trang
+  params,
+  onParamsChange,
+}: TaskMonitoringProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const totalPages = Math.ceil(tasks.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentTasks = tasks.slice(startIndex, startIndex + itemsPerPage);
-
+const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-40">
@@ -60,13 +99,28 @@ const TaskMonitoring = ({
       </div>
     );
   }
+  
+  const requiredKeys = ["confidence", "margin", "response_distribution"];
+  const hasAllValidParams = requiredKeys.every(
+    (key) => {
+      return Number.isFinite(params[key]) && params[key] >= 0
+    }
+  );
+  const resetValues = () => {
+    onParamsChange("margin", 0.05);
+    onParamsChange("confidence", 0.95);
+    onParamsChange("response_distribution", 0.5);
+  };
 
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Task List</CardTitle>
-          <Badge variant="outline" className="bg-info/10 text-info border-info/20">
+          <Badge
+            variant="outline"
+            className="bg-info/10 text-info border-info/20"
+          >
             Live Updates
           </Badge>
         </div>
@@ -83,42 +137,69 @@ const TaskMonitoring = ({
               <TableHead>Start Time</TableHead>
               <TableHead>Duration</TableHead>
               <TableHead>Finish Time</TableHead>
-              <TableHead className="whitespace-nowrap">Created By</TableHead>
+              <TableHead>Created By</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
             {currentTasks.map((task) => (
               <TableRow key={task.task_id}>
-                <TableCell className="font-mono text-xs break-words max-w-[150px]">{task.task_id}</TableCell>
-                <TableCell className="font-mono text-xs break-words max-w-[150px]">{task.file_name}</TableCell>
-                <TableCell className="whitespace-nowrap font-mono text-xs">{task.category}</TableCell>
-                <TableCell className="font-mono text-xs">{getStatusBadge(task.status.toLowerCase())}</TableCell>
-                <TableCell className="whitespace-nowrap font-mono text-xs">
-                  {task.creation_time ? new Date(task.creation_time).toLocaleString("sv-SE") : "-"}
+                <TableCell className="font-mono text-xs max-w-[150px] break-words">
+                  {task.task_id}
                 </TableCell>
-                <TableCell className="whitespace-nowrap font-mono text-xs">
+                <TableCell className="font-mono text-xs max-w-[150px] break-words">
+                  {task.file_name}
+                </TableCell>
+                <TableCell className="font-mono text-xs whitespace-nowrap">
+                  {task.category}
+                </TableCell>
+                <TableCell className="font-mono text-xs">
+                  {getStatusBadge(task.status.toLowerCase())}
+                </TableCell>
+                <TableCell className="font-mono text-xs whitespace-nowrap">
+                  {task.creation_time
+                    ? new Date(task.creation_time).toLocaleString("sv-SE")
+                    : "-"}
+                </TableCell>
+                <TableCell className="font-mono text-xs whitespace-nowrap">
                   {task.duration
                     ? `${task.duration >= 3600 ? Math.floor(task.duration / 3600) + "h " : ""}${
-                        Math.floor(task.duration / 60) % 60 > 0 ? Math.floor(task.duration / 60) % 60 + "m " : ""
+                        Math.floor(task.duration / 60) % 60 > 0
+                          ? Math.floor(task.duration / 60) % 60 + "m "
+                          : ""
                       }${Math.floor(task.duration % 60)}s`
                     : "-"}
                 </TableCell>
-                <TableCell className="whitespace-nowrap font-mono text-xs">
-                  {task.status?.toLowerCase() === "completed" && task.creation_time && !isNaN(task.duration!)
-                    ? new Date(new Date(task.creation_time).getTime() + task.duration! * 1000).toLocaleString("sv-SE")
+                <TableCell className="font-mono text-xs whitespace-nowrap">
+                  {task.status?.toLowerCase() === "completed" &&
+                  task.creation_time &&
+                  !isNaN(task.duration!)
+                    ? new Date(
+                        new Date(task.creation_time).getTime() +
+                          task.duration! * 1000
+                      ).toLocaleString("sv-SE")
                     : "-"}
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">{task.full_name}</TableCell>
-                <TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {task.full_name}
+                </TableCell>
+
+                <TableCell className="text-right">
                   {task.status.toLowerCase() === "completed" && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button size="sm" variant="outline" className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex items-center gap-2"
+                        >
                           <List className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
+
                       <DropdownMenuContent align="start">
+                        {/* --- Download --- */}
                         <DropdownMenuItem
                           onSelect={(e) => {
                             e.preventDefault();
@@ -128,7 +209,8 @@ const TaskMonitoring = ({
                         >
                           {isDownloading === task.task_id ? (
                             <>
-                              <RefreshCw className="mr-2 h-3 w-3 animate-spin" /> Downloading...
+                              <RefreshCw className="mr-2 h-3 w-3 animate-spin" />{" "}
+                              Downloading...
                             </>
                           ) : (
                             <>
@@ -136,23 +218,58 @@ const TaskMonitoring = ({
                             </>
                           )}
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onSelect={(e) => {
-                            e.preventDefault();
-                            handleSample(task.task_id);
-                          }}
-                          disabled={isSampling === task.task_id}
-                        >
-                          {isSampling === task.task_id ? (
-                            <>
-                              <RefreshCw className="mr-2 h-3 w-3 animate-spin" /> Sampling...
-                            </>
-                          ) : (
-                            <>
-                              <FileDown className="mr-2 h-3 w-3" /> Sampling
-                            </>
-                          )}
-                        </DropdownMenuItem>
+
+                        {/* --- Sampling --- */}
+                        <DropdownMenuSub  open={isDropdownOpen}
+                            onOpenChange={(open) => {
+                              if (!open) resetValues(); // chạy khi dropdown đóng
+                              setIsDropdownOpen(open);
+                            }}>
+                          <DropdownMenuSubTrigger>
+                            {isSampling === task.task_id ? (
+                              <>
+                                <RefreshCw className="mr-2 h-3 w-3 animate-spin" />{" "}
+                                Sampling...
+                              </>
+                            ) : (
+                              <>
+                                <FileDown className="mr-2 h-3 w-3" /> Sampling
+                              </>
+                            )}
+                          </DropdownMenuSubTrigger>
+
+                          <DropdownMenuSubContent 
+                          
+                            className="p-3 w-56 space-y-2" 
+                            >
+                            <DecimalInput
+                              value={params.margin}
+                              onChange={(num) => onParamsChange("margin", num)}
+                              placeholder="Margin"
+                            />
+                            <DecimalInput
+                              value={params.confidence}
+                              onChange={(num) => onParamsChange("confidence", num)}
+                              placeholder="Confidence"
+                            />
+                            <DecimalInput
+                              value={params.response_distribution}
+                              onChange={(num) => onParamsChange("response_distribution", num)}
+                              placeholder="Response Distribution"
+                            />
+                            <Button
+                              className="w-full"
+                              onClick={() =>
+                                handleSample(task.task_id, params)
+                              }
+                              disabled={isSampling === task.task_id || !hasAllValidParams}
+                            >
+                              {isSampling === task.task_id
+                                ? "Processing..."
+                                : "Process"}
+                            </Button>
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
@@ -163,7 +280,7 @@ const TaskMonitoring = ({
         </Table>
       </div>
 
-      {/* ✅ Pagination Footer */}
+      {/* Pagination */}
       {tasks.length > 0 && (
         <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30">
           <p className="text-sm text-muted-foreground">
