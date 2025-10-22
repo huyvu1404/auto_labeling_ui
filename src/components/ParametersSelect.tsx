@@ -67,7 +67,7 @@ export const ParameterSelect = ({
       {/* --- Parameter Inputs --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div>
-          <Label htmlFor="margin">Margin</Label>
+          <Label htmlFor="margin">Margin of Error</Label>
           <DecimalInput
             value={selectedParams.margin}
             onChange={(e) => handleChange("margin", Number(e))}
@@ -76,7 +76,7 @@ export const ParameterSelect = ({
         </div>
 
         <div>
-          <Label htmlFor="confidence">Confidence</Label>
+          <Label htmlFor="confidence">Confidence Level</Label>
            <DecimalInput
             value={selectedParams.confidence}
             onChange={(e) => handleChange("confidence", Number(e))}
@@ -85,7 +85,7 @@ export const ParameterSelect = ({
         </div>
 
         <div>
-          <Label htmlFor="response_distribution">Distribution</Label>
+          <Label htmlFor="response_distribution">Response Distribution</Label>
            <DecimalInput
             value={selectedParams.response_distribution}
             onChange={(e) => handleChange("response_distribution", Number(e))}
