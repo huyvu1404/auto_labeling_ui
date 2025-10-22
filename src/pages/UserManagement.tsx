@@ -85,7 +85,6 @@ const UserManagement = () => {
         const data = await response.json();
         setUsers(data);
       } catch (err) {
-        console.log(err)
         alert("Error occured")
       } finally {
         setLoading(false);

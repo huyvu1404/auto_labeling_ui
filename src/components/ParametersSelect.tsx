@@ -31,7 +31,6 @@ export const ParameterSelect = ({
   const requiredKeys = ["confidence", "margin", "response_distribution"];
   const hasAllValidParams = requiredKeys.every(
     (key) => {
-      console.log(selectedParams[key])
       return Number.isFinite(selectedParams[key]) && selectedParams[key] >= 0
     }
   );

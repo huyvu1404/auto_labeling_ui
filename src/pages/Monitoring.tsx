@@ -68,7 +68,6 @@ const Monitoring = () => {
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.log(error)
       alert("An error occurred during sampling.");
     } finally {
       setIsSampling(null);
